@@ -4,6 +4,18 @@ Standalone benchmark scripts for VectorPeak research and demos.
 
 ---
 
+> **This repository contains a benchmark script only.**
+>
+> It demonstrates one specific failure mode — the Negation Trap — in
+> vector-similarity state management. It is not the StructuralDB product,
+> does not implement persistent storage, and is not intended for
+> production use. The in-memory StructuralDB stub in this script exists
+> solely to show the anti-negation mechanism in contrast to the vector
+> retrieval failure. For the full product, API access, and integration
+> docs, contact **[vallikat@vectorpeaktech.com](mailto:vallikat@vectorpeaktech.com)**.
+
+---
+
 ## Negation Trap Benchmark
 
 **File:** `run_benchmark.py`
