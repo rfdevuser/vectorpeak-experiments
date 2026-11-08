@@ -265,6 +265,39 @@ No changes to your Bedrock or Polly configuration. No new IAM roles.
 StructuralDB runs in your existing Python environment and speaks the
 same interface regardless of which AWS services sit downstream.
 
+#### Training and simulation platforms on Bedrock + Polly
+
+A growing category of platforms — AI-driven training simulators,
+scenario-based learning engines, and conversational coaching tools —
+runs on Bedrock for inference and Polly for voice output. These
+platforms are particularly exposed to the negation trap for three
+specific reasons:
+
+**1. Scenario state divergence.** Training simulations track learner
+progress, scenario branches, and decision outcomes across a session.
+When a learner revisits a decision point, the vector retrieval layer
+can surface both the original outcome and a revised outcome at similar
+confidence scores. The agent resolves the conflict in-context, often
+synthesising a scenario state that was never authored — effectively
+hallucinating a training path that does not exist.
+
+**2. Voice output amplifies the error.** Because Polly speaks the
+agent's response directly to the learner, a hallucinated scenario
+branch is delivered with the same confident tone as an authored one.
+There is no visual cue that the response is inconsistent. Learners
+cannot distinguish a synthesised answer from an intended one.
+
+**3. Assessment integrity.** When a simulation platform tracks
+performance or issues certifications, contradictory state retrieval
+corrupts the assessment record. A learner may be scored against a
+scenario outcome that was never the authoritative state — the
+equivalent of grading an exam against the wrong answer key.
+
+StructuralDB removes all three failure modes at the storage layer.
+Each scenario branch, outcome, and learner decision is a signed state.
+Contradictory outcomes for the same decision point cannot coexist.
+Polly speaks from clean, authoritative state every time.
+
 ---
 
 ### Get the full product
