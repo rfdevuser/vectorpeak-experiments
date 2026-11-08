@@ -162,6 +162,111 @@ StructuralDB replaces the vector retrieval layer for authoritative state.
 
 ---
 
+### Using StructuralDB with AWS Bedrock and Polly
+
+StructuralDB requires no code changes to work with Bedrock or Polly. It
+sits upstream of your inference call — it manages state, your existing
+AWS stack handles inference and output exactly as before.
+
+#### How it fits in a Bedrock agent chain
+
+Without StructuralDB, a Bedrock agent reads state from a vector store
+(OpenSearch, pgvector, or a Bedrock Knowledge Base) and may receive
+contradictory documents at similar confidence scores. The model resolves
+the contradiction in-context — this is where hallucination and token
+waste enter.
+
+With StructuralDB, the agent reads a single authoritative state before
+calling Bedrock. No contradiction reaches the model:
+
+```python
+import boto3
+import json
+
+bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+
+# Read authoritative state — anti-negation guarantees exactly one result
+state = sdb.query_active()  # returns the single committed state
+
+# Pass clean context to Bedrock — no disambiguation needed
+body = json.dumps({
+    "messages": [{
+        "role": "user",
+        "content": f"The authoritative state of Transaction #1042 is: "
+                   f"{state[0]['label']}. Proceed with the next workflow step."
+    }],
+    "max_tokens": 512,
+    "anthropic_version": "bedrock-2023-05-31"
+})
+
+response = bedrock.invoke_model(
+    modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
+    body=body
+)
+```
+
+This works identically for any model available on Bedrock — Claude,
+Titan, Llama, Mistral. StructuralDB is model-agnostic.
+
+#### How it fits in a Polly voice chain
+
+Polly converts text to speech. It does not read state directly — it
+speaks whatever the upstream agent hands it. The risk is that a
+hallucinated resolution from a contradictory retrieval gets spoken aloud
+to an end user.
+
+StructuralDB fixes this upstream. The agent reads a clean state, Bedrock
+generates a coherent response, Polly speaks it. The correction happens
+before anything reaches the voice layer:
+
+```python
+import boto3
+
+bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+polly   = boto3.client("polly",           region_name="us-east-1")
+
+# Step 1: Read authoritative state from StructuralDB
+state = sdb.query_active()
+
+# Step 2: Bedrock generates the spoken response from clean context
+body = json.dumps({
+    "messages": [{
+        "role": "user",
+        "content": f"Summarise the status of Transaction #1042 "
+                   f"for a voice response. State: {state[0]['label']}."
+    }],
+    "max_tokens": 128,
+    "anthropic_version": "bedrock-2023-05-31"
+})
+bedrock_resp = bedrock.invoke_model(
+    modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
+    body=body
+)
+spoken_text = json.loads(bedrock_resp["body"].read())["content"][0]["text"]
+
+# Step 3: Polly speaks the hallucination-free response
+polly_resp = polly.synthesize_speech(
+    Text=spoken_text,
+    OutputFormat="mp3",
+    VoiceId="Joanna"
+)
+```
+
+#### Why this matters for AWS-native stacks
+
+AWS shops in financial services and healthcare use Bedrock precisely
+because of data residency and compliance requirements. Those are also
+the environments where a wrong state spoken to a customer or logged in
+an audit trail is a regulatory event. StructuralDB's hash-chain audit
+log and anti-negation enforcer are designed for exactly this compliance
+profile.
+
+No changes to your Bedrock or Polly configuration. No new IAM roles.
+StructuralDB runs in your existing Python environment and speaks the
+same interface regardless of which AWS services sit downstream.
+
+---
+
 ### Get the full product
 
 For API access, integration docs, and pricing:
