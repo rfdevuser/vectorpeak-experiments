@@ -11,6 +11,7 @@ Each script runs with no API key and minimal or no dependencies.
 | [Canonical Vision Operator](README_cvo.md) | `run_cvo_benchmark.py` | VisionCore | `numpy scipy` |
 | [Vulnerability Percolation](README_breachguard.md) | `run_breachguard_benchmark.py` | BreachGuard | none |
 | [Certified Scenario Engine](README_clearseed.md) | `run_clearseed_benchmark.py` | ClearSeed | none |
+| [Generalisation Risk Intelligence](README_modelguard.md) | `run_modelguard_benchmark.py` | ModelGuard | none |
 
 ---
 
@@ -33,7 +34,9 @@ python run_breachguard_benchmark.py
 
 # ClearSeed — deterministic replay vs system PRNG
 python run_clearseed_benchmark.py
-python run_breachguard_benchmark.py
+
+# ModelGuard — Curie distance D = p/n generalisation risk audit
+python run_modelguard_benchmark.py
 ```
 
 ---
@@ -58,6 +61,11 @@ the CVSS-ranked patch using the same single remediation budget.
 using a Legendre-symbol PRG. The integer seed is the complete audit key —
 any regulator can replay the exact scenario matrix byte-for-byte. Five-check
 equidistribution certificate proved unconditionally, not empirically.
+
+**ModelGuard** — the Curie distance D = p/n flags deployments that validation
+loss misses. At D ≈ 1, Marchenko-Pastur generalisation variance diverges
+regardless of val loss. Two models with identical val_loss and identical σ²
+can differ by 40× in generalisation variance at deployment.
 
 ---
 
