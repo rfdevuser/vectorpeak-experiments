@@ -10,6 +10,7 @@ Each script runs with no API key and minimal or no dependencies.
 | [Negation Trap](README_structuraldb.md) | `run_benchmark.py` | StructuralDB | `sentence-transformers numpy` |
 | [Canonical Vision Operator](README_cvo.md) | `run_cvo_benchmark.py` | VisionCore | `numpy scipy` |
 | [Vulnerability Percolation](README_breachguard.md) | `run_breachguard_benchmark.py` | BreachGuard | none |
+| [Certified Scenario Engine](README_clearseed.md) | `run_clearseed_benchmark.py` | ClearSeed | none |
 
 ---
 
@@ -28,6 +29,10 @@ pip install numpy scipy
 python run_cvo_benchmark.py
 
 # BreachGuard — CVSS vs percolation rank mismatch
+python run_breachguard_benchmark.py
+
+# ClearSeed — deterministic replay vs system PRNG
+python run_clearseed_benchmark.py
 python run_breachguard_benchmark.py
 ```
 
@@ -48,6 +53,11 @@ exploitation triggers a network cascade. Γ₄₃ (Molloy-Reed percolation)
 ranks patches by cascade threshold improvement. On a 20-node corporate
 network, the Γ₄₃-ranked patch delivers 8.4× more cascade resilience than
 the CVSS-ranked patch using the same single remediation budget.
+
+**ClearSeed** — regulatory capital scenario generation (FRTB, CCAR, ICAAP)
+using a Legendre-symbol PRG. The integer seed is the complete audit key —
+any regulator can replay the exact scenario matrix byte-for-byte. Five-check
+equidistribution certificate proved unconditionally, not empirically.
 
 ---
 

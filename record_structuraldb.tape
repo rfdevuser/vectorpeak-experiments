@@ -13,8 +13,8 @@ Output structuraldb-demo.gif
 
 Set Shell "bash"
 Set FontSize 15
-Set Width 96
-Set Height 36
+Set Width 140
+Set Height 42
 Set Theme "Dracula"
 Set TypingSpeed 40ms
 Set Padding 12
