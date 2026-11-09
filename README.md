@@ -12,6 +12,7 @@ Each script runs with no API key and minimal or no dependencies.
 | [Vulnerability Percolation](README_breachguard.md) | `run_breachguard_benchmark.py` | BreachGuard | none |
 | [Certified Scenario Engine](README_clearseed.md) | `run_clearseed_benchmark.py` | ClearSeed | none |
 | [Generalisation Risk Intelligence](README_modelguard.md) | `run_modelguard_benchmark.py` | ModelGuard | none |
+| [Joint AV Pipeline Robustness](README_joint_av.md) | `run_joint_av_benchmark.py` | VisionCore + AdelicDrive | `numpy scipy` |
 
 ---
 
@@ -37,6 +38,10 @@ python run_clearseed_benchmark.py
 
 # ModelGuard — Curie distance D = p/n generalisation risk audit
 python run_modelguard_benchmark.py
+
+# VisionCore + AdelicDrive — joint AV pipeline adversarial robustness
+pip install numpy scipy
+python run_joint_av_benchmark.py
 ```
 
 ---
@@ -66,6 +71,12 @@ equidistribution certificate proved unconditionally, not empirically.
 loss misses. At D ≈ 1, Marchenko-Pastur generalisation variance diverges
 regardless of val loss. Two models with identical val_loss and identical σ²
 can differ by 40× in generalisation variance at deployment.
+
+**VisionCore + AdelicDrive (joint)** — camera-noise attacks have a structural
+ceiling. LoG linearity keeps coarse edge maps stable (σ=2: IoU 0.916, σ=4: IoU 0.833
+under L∞ ε=4/255). AdelicDrive's categorical ℤ₂ rule flags then cap ACCELERATE
+at ADS 0.693 vs BRAKE 0.772 — a gap of 0.078 that no continuous perturbation
+can bridge. Three independent mathematical barriers; none requires training.
 
 ---
 
