@@ -23,7 +23,7 @@ Set Padding 12
 # ── Opening prompt ────────────────────────────────────────────────────────────
 Sleep 800ms
 
-Type "pip install numpy -q"
+Type "pip3 install numpy -q"
 Enter
 Sleep 4s
 
