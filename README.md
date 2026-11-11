@@ -16,6 +16,7 @@ Each script runs with no API key and minimal or no dependencies.
 | [Double Descent Certificate](README_doubledescentguard.md) | `run_doubledescentguard_benchmark.py` | DoubleDescentGuard | none |
 | [Adelic Neuromorphic Engine](README_neurocore.md) | `run_neurocore_benchmark.py` | NeuroCore | none |
 | [Interbank Contagion Certificate](README_contagionguard.md) | `run_contagionguard_benchmark.py` | ContagionGuard | `numpy` |
+| [Alternative Credit Risk](README_flowscore.md) | `run_flowscore_benchmark.py` | FlowScore | none |
 
 ---
 
@@ -52,6 +53,9 @@ python run_doubledescentguard_benchmark.py
 # ContagionGuard — interbank spectral stability certificate
 pip install numpy
 python run_contagionguard_benchmark.py
+
+# FlowScore — alternative credit risk from transaction variance
+python run_flowscore_benchmark.py
 ```
 
 ---
@@ -94,6 +98,15 @@ of W ranks systemic importance independent of balance-sheet size. In the Eurozon
 stress preset, ES1 (200B assets, rank #5 by size) is Perron rank #1 — the structural
 amplifier. Injecting 2.5B into ES1 crosses ρ<1; the same capital into FR1 (600B,
 rank #1 by size) leaves the network CRITICAL. Zero fitted parameters.
+
+**FlowScore** — D = σ_ref/σ_tx (Curie distance from transaction variance baseline).
+FlowScore F = 100·D² and P(default|T) = 1−exp(−T·k₀·exp(−α·D²)) [Kramers escape
+rate]. India has ~400M UPI users with no credit history — CIBIL rejects them. A
+Thin-File UPI borrower (CIBIL=0, rejected) has FlowScore 60.9 and PD_90=0.210%;
+a Near Default borrower (CIBIL=660, approved) has FlowScore 1.6 and PD_90=2.229%.
+CSD flag AC=1−D²>0.75 fires 1 month before the NEAR-DEFAULT tier is crossed. 52×
+PD amplification from D=1.0 to D=0.1. Two population constants; zero per-borrower
+fitting. Pure Python, no dependencies.
 
 **VisionCore + AdelicDrive (joint)** — camera-noise attacks have a structural
 ceiling. LoG linearity keeps coarse edge maps stable (σ=2: IoU 0.916, σ=4: IoU 0.833
