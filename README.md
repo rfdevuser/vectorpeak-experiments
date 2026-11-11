@@ -15,6 +15,7 @@ Each script runs with no API key and minimal or no dependencies.
 | [Joint AV Pipeline Robustness](README_joint_av.md) | `run_joint_av_benchmark.py` | VisionCore + AdelicDrive | `numpy scipy` |
 | [Double Descent Certificate](README_doubledescentguard.md) | `run_doubledescentguard_benchmark.py` | DoubleDescentGuard | none |
 | [Adelic Neuromorphic Engine](README_neurocore.md) | `run_neurocore_benchmark.py` | NeuroCore | none |
+| [Interbank Contagion Certificate](README_contagionguard.md) | `run_contagionguard_benchmark.py` | ContagionGuard | `numpy` |
 
 ---
 
@@ -47,6 +48,10 @@ python run_joint_av_benchmark.py
 
 # DoubleDescentGuard — exact F_gen certificate (pure Python, no deps)
 python run_doubledescentguard_benchmark.py
+
+# ContagionGuard — interbank spectral stability certificate
+pip install numpy
+python run_contagionguard_benchmark.py
 ```
 
 ---
@@ -82,6 +87,13 @@ fraction at any effective capacity ratio ρ = p_eff/n_eff. At the double descent
 peak (ρ=1): F_gen = 0.19% — 99.81% of learned capacity is trapped. Val loss is
 blind to this. Same data, 4× more parameters: F_gen jumps from 0.34% to 70.1%.
 Accounts for regularisation strength and SNR, which D = p/n (ModelGuard) cannot.
+
+**ContagionGuard** — ρ(W) = spectral radius of the normalised bilateral exposure
+matrix W certifies the exact contagion threshold (γ_c = 1/ρ). The Perron vector
+of W ranks systemic importance independent of balance-sheet size. In the Eurozone
+stress preset, ES1 (200B assets, rank #5 by size) is Perron rank #1 — the structural
+amplifier. Injecting 2.5B into ES1 crosses ρ<1; the same capital into FR1 (600B,
+rank #1 by size) leaves the network CRITICAL. Zero fitted parameters.
 
 **VisionCore + AdelicDrive (joint)** — camera-noise attacks have a structural
 ceiling. LoG linearity keeps coarse edge maps stable (σ=2: IoU 0.916, σ=4: IoU 0.833
