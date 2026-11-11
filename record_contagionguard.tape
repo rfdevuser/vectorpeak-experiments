@@ -23,10 +23,9 @@ Set Padding 12
 # ── Opening prompt ────────────────────────────────────────────────────────────
 Sleep 800ms
 
-Type "# SRISK and CoVaR give a risk score. ContagionGuard gives a certified threshold."
-Sleep 1.2s
+Type "pip install numpy -q"
 Enter
-Sleep 400ms
+Sleep 4s
 
 Type "python run_contagionguard_benchmark.py"
 Enter
