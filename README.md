@@ -13,6 +13,7 @@ Each script runs with no API key and minimal or no dependencies.
 | [Certified Scenario Engine](README_clearseed.md) | `run_clearseed_benchmark.py` | ClearSeed | none |
 | [Generalisation Risk Intelligence](README_modelguard.md) | `run_modelguard_benchmark.py` | ModelGuard | none |
 | [Joint AV Pipeline Robustness](README_joint_av.md) | `run_joint_av_benchmark.py` | VisionCore + AdelicDrive | `numpy scipy` |
+| [Double Descent Certificate](README_doubledescentguard.md) | `run_doubledescentguard_benchmark.py` | DoubleDescentGuard | none |
 
 ---
 
@@ -42,6 +43,9 @@ python run_modelguard_benchmark.py
 # VisionCore + AdelicDrive — joint AV pipeline adversarial robustness
 pip install numpy scipy
 python run_joint_av_benchmark.py
+
+# DoubleDescentGuard — exact F_gen certificate (pure Python, no deps)
+python run_doubledescentguard_benchmark.py
 ```
 
 ---
@@ -71,6 +75,12 @@ equidistribution certificate proved unconditionally, not empirically.
 loss misses. At D ≈ 1, Marchenko-Pastur generalisation variance diverges
 regardless of val loss. Two models with identical val_loss and identical σ²
 can differ by 40× in generalisation variance at deployment.
+
+**DoubleDescentGuard** — F_gen(ρ) = exp(−2π/ρ²) gives the exact generalisation
+fraction at any effective capacity ratio ρ = p_eff/n_eff. At the double descent
+peak (ρ=1): F_gen = 0.19% — 99.81% of learned capacity is trapped. Val loss is
+blind to this. Same data, 4× more parameters: F_gen jumps from 0.34% to 70.1%.
+Accounts for regularisation strength and SNR, which D = p/n (ModelGuard) cannot.
 
 **VisionCore + AdelicDrive (joint)** — camera-noise attacks have a structural
 ceiling. LoG linearity keeps coarse edge maps stable (σ=2: IoU 0.916, σ=4: IoU 0.833
