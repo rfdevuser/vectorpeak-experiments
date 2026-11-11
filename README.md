@@ -14,6 +14,7 @@ Each script runs with no API key and minimal or no dependencies.
 | [Generalisation Risk Intelligence](README_modelguard.md) | `run_modelguard_benchmark.py` | ModelGuard | none |
 | [Joint AV Pipeline Robustness](README_joint_av.md) | `run_joint_av_benchmark.py` | VisionCore + AdelicDrive | `numpy scipy` |
 | [Double Descent Certificate](README_doubledescentguard.md) | `run_doubledescentguard_benchmark.py` | DoubleDescentGuard | none |
+| [Adelic Neuromorphic Engine](README_neurocore.md) | `run_neurocore_benchmark.py` | NeuroCore | none |
 
 ---
 
