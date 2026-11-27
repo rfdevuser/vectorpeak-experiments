@@ -311,13 +311,15 @@ def main():
     certs   = run_certificate_phase()
     run_presets_phase()
 
-    all_grade = all("REGULATORY" in c["grade"] for c in certs)
+    n_reg     = sum(1 for c in certs if "REGULATORY" in c["grade"])
+    all_grade = n_reg == len(certs)
 
     print(f"\n{BOLD}{_hr('═')}{RESET}")
     print(f"  Auditability   : ClearSeed replay byte-identical  "
-          f"{GREEN}✓{RESET}" if matched else f"  {RED}✗{RESET}")
-    print(f"  Equidistribution: all 4 seeds REGULATORY GRADE  "
-          f"{GREEN}✓{RESET}" if all_grade else f"  {RED}✗{RESET}")
+          + (f"{GREEN}✓{RESET}" if matched else f"{RED}✗{RESET}"))
+    reg_col = GREEN if all_grade else YELLOW
+    print(f"  Equidistribution: {n_reg}/{len(certs)} seeds REGULATORY GRADE  "
+          + (f"{reg_col}✓{RESET}" if all_grade else f"{reg_col}{n_reg}/{len(certs)}{RESET}"))
     print(f"  System PRNG    : regulator cannot replay without full RNG state")
     print(f"  ClearSeed      : integer seed is the complete audit key")
     print(f"{BOLD}{_hr('═')}{RESET}\n")
