@@ -307,6 +307,7 @@ def main():
     run_fgen_curve()
     run_certifications()
     run_regularisation_lever()
+    run_self_tests()
 
     print(f"\n{BOLD}{'═'*68}{RESET}")
     print(f"  Val loss    : measures bias² + variance — blind to generalisation fraction")
@@ -315,6 +316,39 @@ def main():
     print(f"  At ρ = 1    : {RED}99.81% of learned capacity is trapped — do not deploy{RESET}")
     print(f"  At ρ ≥ {RHO_TH:.1f}  : {GREEN}F_gen ≥ 67.5% — production safe{RESET}")
     print(f"{BOLD}{'═'*68}{RESET}\n")
+
+
+# ── Self-tests ─────────────────────────────────────────────────────────────────
+
+def run_self_tests() -> bool:
+    checks = []
+
+    def _chk(name, cond):
+        checks.append((name, bool(cond)))
+
+    _chk("F_gen(ρ*) ≈ 0.5",        abs(F_gen(RHO_STAR) - 0.5) < 0.001)
+    _chk("F_gen(1) == F_GEN_PEAK", abs(F_gen(1.0) - F_GEN_PEAK) < 1e-12)
+    _chk("F_gen(ρ_th) == F_GEN_THERMAL", abs(F_gen(RHO_TH) - F_GEN_THERMAL) < 1e-12)
+
+    rhos = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]
+    _chk("F_gen strictly monotone",
+         all(F_gen(rhos[i]) < F_gen(rhos[i + 1]) for i in range(len(rhos) - 1)))
+
+    _chk("RHO_STAR ∈ (3.0, 3.1)",   3.0 < RHO_STAR < 3.1)
+    _chk("F_gen(0.001) > 0",        F_gen(0.001) > 0.0)
+
+    r1_name, _ = regime(1.0)
+    r5_name, _ = regime(5.0)
+    _chk("regime(1.0) == CRITICAL",   r1_name == "CRITICAL")
+    _chk("regime(5.0) == ACCESSIBLE", r5_name == "ACCESSIBLE")
+
+    n_pass = sum(1 for _, ok in checks if ok)
+    n_total = len(checks)
+    fails = [name for name, ok in checks if not ok]
+    col = GREEN if not fails else RED
+    print(f"\n{BOLD}[SELF-TESTS]{RESET}  {col}{n_pass}/{n_total} PASS{RESET}"
+          + (f"  {RED}FAIL: {', '.join(fails)}{RESET}" if fails else ""))
+    return not fails
 
 
 if __name__ == "__main__":

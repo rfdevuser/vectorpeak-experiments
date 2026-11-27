@@ -467,6 +467,7 @@ def main() -> None:
     phase2_hallucination(n_trials=20)
     phase3_token_compression()
     phase4_agent_loop(n_calls=20)
+    run_self_tests()
 
     print(f"\n{BOLD}{_hr('═')}{RESET}")
     print(f"{BOLD}  SUMMARY{RESET}")
@@ -485,6 +486,48 @@ def main() -> None:
   {'Human-readable':<46}  {'NO':>18}  {'YES':>12}
 """)
     print(f"{BOLD}{_hr('═')}{RESET}\n")
+
+
+# ── Self-tests ─────────────────────────────────────────────────────────────────
+
+def run_self_tests() -> bool:
+    import random as _rand
+    _rand.seed(99)
+    checks = []
+
+    def _chk(name, cond):
+        checks.append((name, bool(cond)))
+
+    _chk("round-trip valid (1000 rnd)",
+         all(ktp_decode(ktp_encode(s, t, e))["valid"]
+             for s, t, e in [(_rand.randint(0, 9), _rand.randint(0, 9), _rand.randint(0, 9))
+                              for _ in range(1000)]))
+
+    for s, t, e in [(0, 0, 0), (9, 9, 9), (5, 5, 0), (1, 2, 3)]:
+        enc = ktp_encode(s, t, e)
+        dec = ktp_decode(enc)
+        _chk(f"edge ({s},{t},{e}) valid",        dec["valid"])
+        _chk(f"edge ({s},{t},{e}) shard",        dec["shard"] == s)
+        _chk(f"edge ({s},{t},{e}) tier",         dec["tier"] == t)
+        _chk(f"edge ({s},{t},{e}) entity_type",  dec["entity_type"] == e)
+
+    _chk("validate agrees (500 rnd)",
+         all(ktp_validate(ktp_encode(s, t, e))
+             for s, t, e in [(_rand.randint(0, 9), _rand.randint(0, 9), _rand.randint(0, 9))
+                              for _ in range(500)]))
+
+    valid_ids  = [ktp_encode(_rand.randint(0, 9), _rand.randint(0, 9), _rand.randint(0, 9))
+                  for _ in range(200)]
+    rejection  = sum(1 for iid in valid_ids if not ktp_validate(ktp_mutate(iid)))
+    _chk("mutate rejection ≥ 95%", rejection >= 190)
+
+    n_pass = sum(1 for _, ok in checks if ok)
+    n_total = len(checks)
+    fails = [name for name, ok in checks if not ok]
+    col = GREEN if not fails else RED
+    print(f"\n{BOLD}[SELF-TESTS]{RESET}  {col}{n_pass}/{n_total} PASS{RESET}"
+          + (f"  {RED}FAIL: {', '.join(fails)}{RESET}" if fails else ""))
+    return not fails
 
 
 if __name__ == "__main__":

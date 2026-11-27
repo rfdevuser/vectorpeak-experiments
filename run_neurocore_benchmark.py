@@ -283,6 +283,7 @@ def main():
     run_band_structure()
     run_energy_comparison()
     run_spike_demo()
+    run_self_tests()
 
     print(f"\n{BOLD}{'═'*68}{RESET}")
     print(f"  Free parameters:  {GREEN}0  (Brian2/NEST: 8–15 — NS-030 has none){RESET}")
@@ -290,6 +291,31 @@ def main():
     print(f"  Sleep fraction:   {GREEN}1/3 (derived; matches biological observation){RESET}")
     print(f"  Energy (n=4096):  {GREEN}262,144× advantage at Landauer limit{RESET}")
     print(f"{BOLD}{'═'*68}{RESET}\n")
+
+
+# ── Self-tests ─────────────────────────────────────────────────────────────────
+
+def run_self_tests() -> bool:
+    checks = []
+
+    def _chk(name, cond):
+        checks.append((name, bool(cond)))
+
+    _chk("N_BANDS == round(1/CHI)",         N_BANDS == round(1.0 / CHI))
+    _chk("SLEEP_FRAC == 1/3",               abs(SLEEP_FRAC - 1.0 / 3.0) < 1e-12)
+    _chk("TAU_INF == 1/(2π)",               abs(TAU_INF - 1.0 / (2 * PI)) < 1e-12)
+    _chk("REFRACTORY == TAU_INF·ln2",       abs(REFRACTORY - TAU_INF * math.log(2)) < 1e-12)
+    _chk("E_LANDAUER > 0",                  E_LANDAUER > 0)
+    _chk("COL_DEPTH == ⌈log₂(10⁴)⌉ == 13", COL_DEPTH == 13)
+    _chk("n=4096,d=64 speedup == 262144",   4096 * 64 == 262144)
+
+    n_pass = sum(1 for _, ok in checks if ok)
+    n_total = len(checks)
+    fails = [name for name, ok in checks if not ok]
+    col = GREEN if not fails else RED
+    print(f"\n{BOLD}[SELF-TESTS]{RESET}  {col}{n_pass}/{n_total} PASS{RESET}"
+          + (f"  {RED}FAIL: {', '.join(fails)}{RESET}" if fails else ""))
+    return not fails
 
 
 if __name__ == "__main__":

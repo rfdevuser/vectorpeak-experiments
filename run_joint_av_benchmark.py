@@ -28,9 +28,13 @@ Dependencies: numpy scipy
 """
 
 import math
-import numpy as np
-from scipy.ndimage import gaussian_laplace, gaussian_filter
-from scipy.signal import fftconvolve
+import sys
+try:
+    import numpy as np
+    from scipy.ndimage import gaussian_laplace, gaussian_filter
+    from scipy.signal import fftconvolve
+except ImportError:
+    sys.exit("numpy and scipy required:  pip install numpy scipy")
 
 BOLD  = "\033[1m"
 RED   = "\033[91m"

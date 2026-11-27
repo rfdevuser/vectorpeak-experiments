@@ -303,12 +303,48 @@ def banner():
 """)
 
 
+# ── Self-tests ─────────────────────────────────────────────────────────────────
+
+def run_self_tests() -> bool:
+    import random as _rand
+    _rand.seed(0)
+    checks = []
+
+    def _chk(name, cond):
+        checks.append((name, bool(cond)))
+
+    _chk("_D ∈ [0,1] (500 rnd)",
+         all(0.0 <= _D(_rand.uniform(0.01, 50000), _rand.uniform(0.01, 50000)) <= 1.0
+             for _ in range(500)))
+    _chk("_F ∈ [0,100] (500 rnd)",
+         all(0.0 <= _F(_rand.random()) <= 100.0 for _ in range(500)))
+    _chk("_PD ∈ [0,1] (500 rnd)",
+         all(0.0 <= _PD(_rand.random(), _rand.uniform(1, 180)) <= 1.0 for _ in range(500)))
+    _chk("_PD monotone (200 rnd)",
+         all(_PD(_rand.uniform(0.0, d), 90) >= _PD(d, 90)
+             for d in [_rand.uniform(0.1, 1.0) for _ in range(200)]))
+    _chk("_D(x,x) == 1.0",    _D(8500, 8500) == 1.0)
+    _chk("_F(1.0) == 100.0",  _F(1.0) == 100.0)
+    _chk("_F(0.0) == 0.0",    _F(0.0) == 0.0)
+    _chk("CSD fires D<0.5",   _AC(0.49) > 0.75)
+    _chk("CSD clear D≥0.5",   not (_AC(0.50) > 0.75))
+
+    n_pass = sum(1 for _, ok in checks if ok)
+    n_total = len(checks)
+    fails = [name for name, ok in checks if not ok]
+    col = GREEN if not fails else RED
+    print(f"\n{BOLD}[SELF-TESTS]{RESET}  {col}{n_pass}/{n_total} PASS{RESET}"
+          + (f"  {RED}FAIL: {', '.join(fails)}{RESET}" if fails else ""))
+    return not fails
+
+
 if __name__ == "__main__":
     banner()
     phase1()
     phase2()
     phase3()
     phase4()
+    run_self_tests()
     b = _hr()
     print(f"\n{BOLD}{CYAN}{b}{RESET}")
     print(f"{BOLD}{GREEN}  FlowScore benchmark complete{RESET}")

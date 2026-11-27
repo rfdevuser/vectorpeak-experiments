@@ -37,9 +37,12 @@ import hashlib
 import sys
 import time
 
-import numpy as np
-from scipy.ndimage import gaussian_laplace, gaussian_filter
-from scipy.signal import fftconvolve
+try:
+    import numpy as np
+    from scipy.ndimage import gaussian_laplace, gaussian_filter
+    from scipy.signal import fftconvolve
+except ImportError:
+    sys.exit("numpy and scipy required:  pip install numpy scipy")
 
 # ── Terminal colours ──────────────────────────────────────────────────────────
 RED    = "\033[91m"
