@@ -36,7 +36,7 @@ RESET = "\033[0m"
 
 def p_adic_valuation(n: int, p: int) -> int:
     if n == 0:
-        return 0
+        return 10 ** 9
     n = abs(n)
     v = 0
     while n % p == 0:
@@ -78,10 +78,14 @@ class MemTree:
         self.npc_name = npc_name
         self.p = p
         self._memories: list = []
+        self._shell_counters: dict = {}
 
     def insert(self, text: str, shell: int, tags=None) -> Memory:
         base = self.p ** shell
-        key = base * (2 * len(self._memories) + 1)
+        c = self._shell_counters.get(shell, 0)
+        # multiplier = 1 + c*p ≡ 1 (mod p), so v_p(multiplier)=0 for any prime p
+        key = base * (1 + c * self.p)
+        self._shell_counters[shell] = c + 1
         mem = Memory(key=key, text=text, shell=shell, tags=tags or [])
         self._memories.append(mem)
         return mem
@@ -94,10 +98,17 @@ class MemTree:
         ranked = sorted(self._memories,
                         key=lambda m: (m.shell, -self._relevance(m.text, context)))
         selected, used = [], 0
+        min_rejected_shell = None
         for m in ranked:
+            # once a shell-S item is rejected, never select a lower-priority shell
+            if min_rejected_shell is not None and m.shell > min_rejected_shell:
+                break
             if used + m.tokens <= budget:
                 selected.append(m)
                 used += m.tokens
+            else:
+                if min_rejected_shell is None:
+                    min_rejected_shell = m.shell
         return selected
 
     def flat_query(self, context: str, budget: int) -> list:
@@ -152,6 +163,20 @@ def run_valuation_phase():
         col = GREEN if ok else RED
         print(f"  {n:>6}  {p:>3}  {got:>8}  {expected:>8}  {col}{'PASS' if ok else 'FAIL'}{RESET}  {label}")
 
+    # key formula correctness for p=3: v_3(key) must equal the shell for every inserted memory
+    print(f"\n  Key formula v_p(key)==shell for p=3 — 4 insertions per shell:")
+    print(f"  {'shell':>6}  {'key':>8}  {'v_3(key)':>8}  Result")
+    print(f"  {'─'*6}  {'─'*8}  {'─'*8}  {'─'*8}")
+    t3 = MemTree("p3_test", p=3)
+    for shell in range(4):
+        for _ in range(4):
+            m = t3.insert(f"item shell {shell}", shell)
+            got_v = p_adic_valuation(m.key, 3)
+            ok = got_v == shell
+            all_ok = all_ok and ok
+            col = GREEN if ok else RED
+            print(f"  {shell:>6}  {m.key:>8}  {got_v:>8}  {col}{'PASS' if ok else 'FAIL'}{RESET}")
+
     rng = random.Random(42)
     triples = [(rng.randint(1, 10000), rng.randint(1, 10000), rng.randint(1, 10000))
                for _ in range(500)]
@@ -203,7 +228,27 @@ def run_shell_phase():
     print(f"  Budget: {len(tree2._memories)} memories, limit={budget} tokens")
     col = GREEN if budget_ok else RED
     print(f"  Tokens retrieved: {col}{tokens_used}{RESET} <= {budget}: {'PASS' if budget_ok else 'FAIL'}")
-    return order_ok and budget_ok
+    print()
+
+    # permanent memory under budget constraints: when a lore item cannot fit,
+    # transient items must NOT displace it — lore always has first claim on the budget
+    tree3 = MemTree("TightBudgetNPC", p=2)
+    tree3.insert("Foundational lore: ancient oath binding all actions of this character forever.", 0)
+    for _ in range(5):
+        tree3.insert("Transient: player glanced left.", 3)
+    lore_tokens = tree3._memories[0].tokens
+    # set budget just below the lore item so it cannot fit
+    tight_budget = lore_tokens - 1
+    result3 = tree3.query("lore oath", tight_budget)
+    result_shells = [m.shell for m in result3]
+    # lore is absent (too large) but transient must also be absent (lore was rejected first)
+    priority_ok = 3 not in result_shells
+    col = GREEN if priority_ok else RED
+    print(f"  Tight budget (lore={lore_tokens} tok, budget={tight_budget}):")
+    print(f"  Lore rejected → transient blocked from filling its slot: "
+          f"{col}{'PASS' if priority_ok else 'FAIL'}{RESET}  result shells={result_shells}")
+
+    return order_ok and budget_ok and priority_ok
 
 # ── Phase 3: Guardrail chain ──────────────────────────────────────────────────
 
