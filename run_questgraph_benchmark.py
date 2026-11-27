@@ -8,10 +8,11 @@ Three claims:
     Scholar and warrior share prereq=16 mod 32. At state=16, both are
     available simultaneously. No conditional logic. One congruence per node.
 
-  Claim 2 — Merge: one congruence catches all branch predecessors.
+  Claim 2 — Merge: two congruences, one per branch endpoint, block pre-branch entry.
     Scholar: state=16+256=272; warrior: state=16+512=528.
-    breach_vault prereq=16 mod 256.
-    272 mod 256 = 16, 528 mod 256 = 16. Both satisfy. Zero special cases.
+    breach_vault primary prereq=272 mod 512 (k=9): catches scholar and both-done.
+    breach_vault alt prereq=528 mod 1024 (k=10): catches warrior-only.
+    state=16 (no branch): 16 mod 512 ≠ 272 and 16 mod 1024 ≠ 528. BLOCKED.
 
   Claim 3 — Side quest orthogonality.
     find_inscription delta=1024. 1024 mod 256 = 0.
@@ -119,7 +120,7 @@ def build_demo_chain() -> QuestChain:
     q.add_node("find_entrance",   "Find the Vault Entrance",      state_delta=8,              prereq=8,  k=4, node_type="fork",   track="main")
     q.add_node("scholar_approach","Decipher the Vault Lock",      state_delta=BRANCH_SCHOLAR, prereq=16, k=5, node_type="fork",   track="branch_a")
     q.add_node("warrior_approach","Override the Vault Mechanism", state_delta=BRANCH_WARRIOR, prereq=16, k=5, node_type="fork",   track="branch_b")
-    q.add_node("breach_vault",    "Enter the Vault",              state_delta=16,             prereq=16, k=8, node_type="merge",  track="main")
+    q.add_node("breach_vault",    "Enter the Vault",              state_delta=16,             prereq=272, k=9, alt_prereqs=[(528, 10)], node_type="merge",  track="main")
     q.add_node("claim_relic",     "Claim the Adelic Compass",     state_delta=32,             prereq=32, k=8, node_type="linear", track="main")
     q.add_node("return_home",     "Return to the Archivist",      state_delta=64,             prereq=64, k=8, node_type="end",    track="main")
     q.add_node("find_inscription","Discover the Hidden Inscription", state_delta=SIDE_A_FLAG, prereq=8,  k=4, node_type="side",   track="side_a")
@@ -174,15 +175,23 @@ def run_fork_merge_phase():
 
     chain2 = build_demo_chain()
     chain2._completed = {"accept_quest", "explore_ruins", "find_entrance"}
+    avail_prebranch = {n.id for n in chain2.available_nodes(16)}
+    chain2._completed = {"accept_quest", "explore_ruins", "find_entrance"}
     avail_scholar = {n.id for n in chain2.available_nodes(272)}
     chain2._completed = {"accept_quest", "explore_ruins", "find_entrance"}
     avail_warrior = {n.id for n in chain2.available_nodes(528)}
-    merge_ok = "breach_vault" in avail_scholar and "breach_vault" in avail_warrior
+    vault_blocked_prebranch = "breach_vault" not in avail_prebranch
+    merge_ok = (vault_blocked_prebranch
+                and "breach_vault" in avail_scholar
+                and "breach_vault" in avail_warrior)
     col = GREEN if merge_ok else RED
-    print(f"  Merge — breach_vault prereq=16 mod 256:")
-    print(f"    Scholar path: state=272  ->  272 mod 256 = {272%256}  -> breach_vault {'IN' if 'breach_vault' in avail_scholar else 'NOT IN'} available")
-    print(f"    Warrior path: state=528  ->  528 mod 256 = {528%256}  -> breach_vault {'IN' if 'breach_vault' in avail_warrior else 'NOT IN'} available")
-    print(f"  One congruence catches both predecessors: {col}{'PASS' if merge_ok else 'FAIL'}{RESET}")
+    col_b = GREEN if vault_blocked_prebranch else RED
+    print(f"  Merge — breach_vault prereq=272 mod 512 (scholar) / 528 mod 1024 (warrior):")
+    print(f"    Pre-branch:  state=16   ->  16 mod 512={16%512}, 16 mod 1024={16%1024}  "
+          f"-> breach_vault {col_b}{'BLOCKED' if vault_blocked_prebranch else 'INCORRECTLY OPEN'}{RESET}")
+    print(f"    Scholar path: state=272  ->  272 mod 512={272%512}  -> breach_vault {'IN' if 'breach_vault' in avail_scholar else 'NOT IN'} available")
+    print(f"    Warrior path: state=528  ->  528 mod 1024={528%1024}  -> breach_vault {'IN' if 'breach_vault' in avail_warrior else 'NOT IN'} available")
+    print(f"  Both branches open vault, pre-branch blocked: {col}{'PASS' if merge_ok else 'FAIL'}{RESET}")
 
     return fork_ok and merge_ok
 
@@ -268,7 +277,7 @@ def main():
     col = GREEN if passed == 4 else RED
     print(f"  Phase results: {col}{passed}/4 PASS{RESET}")
     print(f"  Fork:       {GREEN}both branches available simultaneously at prereq=16 mod 32{RESET}")
-    print(f"  Merge:      {GREEN}one congruence (mod 256) catches scholar=272 and warrior=528{RESET}")
+    print(f"  Merge:      {GREEN}prereq=272 mod 512 (scholar) + alt 528 mod 1024 (warrior); pre-branch state=16 blocked{RESET}")
     print(f"  Side quest: {GREEN}bit 10 delta orthogonal to all main-quest mod-256 prereqs{RESET}")
     print(f"{BOLD}{'='*68}{RESET}\n")
 

@@ -210,8 +210,8 @@ def run_shell_gate_phase():
     print(f"  Shell order in selected: {shells}")
     print(f"  Lore (v=0) before transient (v=3): {col}{'PASS' if order_ok else 'FAIL'}{RESET}")
 
-    blocked = not dialogue_allowed(memory_state=0, prereq=4, p=2, k=4)
-    allowed = dialogue_allowed(memory_state=4, prereq=4, p=2, k=4)
+    blocked = not dialogue_allowed(state=0, prereq=4, p=2, k=4)
+    allowed = dialogue_allowed(state=4, prereq=4, p=2, k=4)
     gate_ok = blocked and allowed
     print(f"\n  Gating — prereq=4, mod=16:")
     print(f"    state=0 blocked: {GREEN if blocked else RED}{'PASS' if blocked else 'FAIL'}{RESET}   "
